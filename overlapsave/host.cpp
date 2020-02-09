@@ -7,13 +7,14 @@
 #include <boost/chrono.hpp>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
 #include "Signal_Loader.h"
 
 using namespace std;
 
 
-
-void load_samples(std::vector<float> &x_Re, std::string infilename) {
+template <typename T>
+void load_samples(std::vector<T> &x_Re, std::string infilename) {
 	std::fstream file;
 	file.open(infilename, std::ios::in);
 	if (!file) {
@@ -32,7 +33,8 @@ void load_samples(std::vector<float> &x_Re, std::string infilename) {
 	file.close();
 }
 
-void save_samples(std::vector<float> &y, std::string outfilename) {
+template <typename T>
+void save_samples(std::vector<T> &y, std::string outfilename) {
 	std::fstream file;
 	file.open(outfilename, std::ios::out, std::ios::app);
 	if (!file) {
@@ -51,8 +53,8 @@ void save_samples(std::vector<float> &y, std::string outfilename) {
 }
 
 
-
-void zero_padding(std::vector<float> &x, int N)
+template <typename T>
+void zero_padding(std::vector<T> &x, int N)
 {
 	for (int i = 0; i < N; i++)
 	{
@@ -72,8 +74,8 @@ void create_output_file(string output_path)
 }
 
 
-
-void init(vector<float> &h, vector<float> &x, vector<float>&y_linear, vector<float>&y_circular, int &Nh, int N, string filter_path, string output_path)
+template <typename T>
+void init(vector<T> &h, vector<T> &x, vector<T>&y_linear, vector<T>&y_circular, int &Nh, int N, string filter_path, string output_path)
 {
 	load_samples(h, filter_path);
 	Nh = h.size();
@@ -82,10 +84,11 @@ void init(vector<float> &h, vector<float> &x, vector<float>&y_linear, vector<flo
 	zero_padding(y_linear, N+Nh-1);
 	zero_padding(y_circular, N - (Nh - 1));
 	create_output_file(output_path);
+
 }
 
-
-void circular_convolution(vector<float>&x, vector<float>&h, vector<float>&y_linear, vector<float>&y_circular, int N)
+template <typename T>
+void circular_convolution(vector<T>&x, vector<T>&h, vector<T>&y_linear, vector<T>&y_circular, int N)
 {
 	int Nx = x.size();
 	int Nh = h.size();
@@ -94,7 +97,7 @@ void circular_convolution(vector<float>&x, vector<float>&h, vector<float>&y_line
 	// linear convolution
 	for (int n = 0; n < Ny; n++)
 	{
-		float yn = 0;
+		T yn = 0;
 		for (int k = 0; k < Nh; k++)
 		{
 			if (((n - k) < 0) || ((n - k) >= Nx))	yn += 0;
@@ -124,11 +127,12 @@ void overlapsave()
 	vector<float> x;
 	vector<float> y_linear;
 	vector<float> y_circular;
-	int N = 8;
+	int N = 1024;
 	int Nh;
 	int Fs = 3000;
-	init(x, h, y_linear, y_circular, N, Nh, filter_path, output_path);
-
+	init(x, h, y_linear, y_circular, Nh, N, filter_path, output_path);
+	Signal_Loader<float> w(x, Fs);
+	boost::thread t(w);
 	//circular_convolution(x, h, y_linear, y_circular, N);
 	//for (int i = 0; i < y_circular.size(); i++)
 	//{
@@ -138,16 +142,24 @@ void overlapsave()
 	int block_number = 0;
 	int iteration = 0;
 	int block_is_full;
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	while (true)
 	{
-		if (block_is_full)
+		if (x.size() >= N)
 		{
+			t2 = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+			std::cout << time_span.count() * 1000000 << " us." << std::endl;
+			cout << x.size() << "   " << x[x.size() - 1] << endl;
 			circular_convolution(x, h, y_linear, y_circular, N);
-			save_samples(y_circular, output_path);
+			//save_samples(y_circular, output_path);
+			x.erase(x.begin(), x.begin() + N);
 			block_number += 1;
+			t1 = std::chrono::high_resolution_clock::now();
 		}
-		iteration += 1;
 	}
+	t.join();
 }
 
 
@@ -156,23 +168,6 @@ void overlapsave()
 int main()
 {
 	srand(time(NULL));
-	std::vector<double> x;
-	x.reserve(20000000);
-	int Fs = 1000;
-	Signal_Loader<double> w(x, Fs);
-	boost::thread t(w);
-	int i = 0;
-	while (true)
-	{
-		if (x.size() %1000 == 0)
-			if (x.size() > 0) {
-				cout << x.size() - 1 << "   " << x[x.size() - 1] << endl;
-			}
-		i++;
-	}
-	//overlapsave();
-	//boost::thread t( thread_load_x_signal );
-	t.join();
-
+	overlapsave();
 	return 0;
 }

@@ -10,7 +10,7 @@ using namespace std;
 
 
 template<typename T>
-Signal_Loader<T>::Signal_Loader(std::vector<T> &x, int Fs) : x(&x), Fs(Fs)
+Signal_Loader<T>::Signal_Loader(std::vector<T> &x, int Fs) : x(&x), Fs(Fs), end(false)
 {
 	// empty constructor
 }
@@ -20,7 +20,7 @@ void Signal_Loader<T>::operator()()
 {
 	int nano = 1000000000;
 	int Ts = (nano / Fs);
-	while (true)
+	while (!end)
 	{
 		T sample = generate_sample();
 		//cout << sample << endl;
@@ -37,10 +37,19 @@ T Signal_Loader<T>::generate_sample()
 }
 
 
+template<typename T>
+void linker_error_solver_type(std::vector<T> x, int Fs = 1000)
+{
+	Signal_Loader<T>solver(x, Fs);
+	solver();
+}
+
 void linker_error_solver()
 {
-	std::vector<double> x;
-	int Fs = 1000;
-	Signal_Loader<double>solver(x, Fs);
-	solver();
+	std::vector<float> x;
+	std::vector<double> y;
+	std::vector<int> z;
+	linker_error_solver_type(x);
+	linker_error_solver_type(y);
+	linker_error_solver_type(z);
 }

@@ -13,5 +13,6 @@ public:
 private:
 	std::vector<T> *x;
 	int Fs;
+	bool end;
 	T generate_sample();
 };
