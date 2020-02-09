@@ -7,59 +7,11 @@
 #include <boost/chrono.hpp>
 #include <cstdlib>
 #include <ctime>
+#include "Signal_Loader.h"
 
 using namespace std;
 
 
-
-template<typename T>
-class Signal_Loader
-{
-public:
-	Signal_Loader(std::vector<T> &x, int Fs): x(&x), Fs(Fs)
-	{
-		// empty constructor
-	}
-
-	void operator()()
-	{
-		int nano = 1000000000;
-		int Ts = (nano / Fs);
-		while (true)
-		{
-			T sample = generate_sample();
-			//cout << sample << endl;
-			x->push_back(sample);
-			boost::this_thread::sleep_for(boost::chrono::nanoseconds{ Ts });
-		}
-	}
-
-private:
-	std::vector<T> *x;
-	int Fs;
-
-	T generate_sample()
-	{
-		T sample = static_cast<T>(rand()% 100000)/100000;
-		return sample;
-	}
-
-};
-
-
-
-
-
-template <typename T>
-void thread_load_x_signal(std::vector<T> &x, int Fs)
-{
-	double Ts = static_cast<double>(1 / Fs);
-	while (true)
-	{
-		boost::this_thread::sleep_for(boost::chrono::seconds{ Ts });
-		cout << "aa" << endl;
-	}
-}
 
 void load_samples(std::vector<float> &x_Re, std::string infilename) {
 	std::fstream file;
@@ -205,6 +157,7 @@ int main()
 {
 	srand(time(NULL));
 	std::vector<double> x;
+	x.reserve(20000000);
 	int Fs = 1000;
 	Signal_Loader<double> w(x, Fs);
 	boost::thread t(w);
