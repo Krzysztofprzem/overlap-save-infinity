@@ -5,6 +5,11 @@
 #include <cstdlib>
 #include <ctime>
 #include "Signal_Loader.h"
+#include "chrono"
+#include <boost/chrono.hpp>
+#include <boost/thread/thread.hpp> 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/thread/thread.hpp> 
 
 using namespace std;
 
@@ -18,14 +23,23 @@ Signal_Loader<T>::Signal_Loader(std::vector<T> &x, int Fs) : x(&x), Fs(Fs), end(
 template<typename T>
 void Signal_Loader<T>::operator()()
 {
-	int nano = 1000000000;
-	int Ts = (nano / Fs);
+	int nano = 1;
+	double Ts = static_cast<double>(nano) / Fs;
+	//cout << Ts << "    "<<nano<<"     "<<Fs<<endl;
+	//cin >> Ts;
+	auto start = std::chrono::steady_clock::now();
 	while (!end)
 	{
-		T sample = generate_sample();
-		//cout << sample << endl;
-		x->push_back(sample);
-		boost::this_thread::sleep_for(boost::chrono::nanoseconds{ Ts });
+		auto finish = std::chrono::steady_clock::now();
+		double elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(finish - start).count();
+		if (elapsed_seconds >= Ts)
+		{
+			cout << elapsed_seconds<<"     "<<Ts << endl;
+			T sample = generate_sample();
+			//cout << sample << endl;
+			x->push_back(sample);
+			start = std::chrono::steady_clock::now();
+		}
 	}
 }
 

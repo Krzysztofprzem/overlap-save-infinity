@@ -129,7 +129,7 @@ void overlapsave()
 	vector<float> y_circular;
 	int N = 1024;
 	int Nh;
-	int Fs = 3000;
+	int Fs = 100;
 	init(x, h, y_linear, y_circular, Nh, N, filter_path, output_path);
 	Signal_Loader<float> w(x, Fs);
 	boost::thread t(w);
@@ -142,21 +142,21 @@ void overlapsave()
 	int block_number = 0;
 	int iteration = 0;
 	int block_is_full;
-	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	//std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+	//std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	while (true)
 	{
 		if (x.size() >= N)
 		{
-			t2 = std::chrono::high_resolution_clock::now();
-			std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
-			std::cout << time_span.count() * 1000000 << " us." << std::endl;
-			cout << x.size() << "   " << x[x.size() - 1] << endl;
+			//t2 = std::chrono::high_resolution_clock::now();
+			//std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
+			//std::cout << time_span.count() * 1000000 << " us." << std::endl;
+			//cout << x.size() << "   " << x[x.size() - 1] << endl;
 			circular_convolution(x, h, y_linear, y_circular, N);
 			//save_samples(y_circular, output_path);
 			x.erase(x.begin(), x.begin() + N);
 			block_number += 1;
-			t1 = std::chrono::high_resolution_clock::now();
+			//t1 = std::chrono::high_resolution_clock::now();
 		}
 	}
 	t.join();
