@@ -75,16 +75,15 @@ void create_output_file(string output_path)
 
 
 template <typename T>
-void init(vector<T> &h, vector<T> &x, vector<T>&y_linear, vector<T>&y_circular, int &Nh, int N, string filter_path, string output_path)
+void init(vector<T> &x, vector<T> &h, vector<T>&y_linear, vector<T>&y_circular, int &Nh, int N, string filter_path, string output_path)
 {
 	load_samples(h, filter_path);
 	Nh = h.size();
-	zero_padding(h, N - Nh);
-	zero_padding(x, N);
-	zero_padding(y_linear, N+Nh-1);
+	//zero_padding(h, Nh);
+	zero_padding(x, Nh-1);
+	zero_padding(y_linear, N + Nh - 1);
 	zero_padding(y_circular, N - (Nh - 1));
 	create_output_file(output_path);
-
 }
 
 template <typename T>
@@ -93,19 +92,17 @@ void circular_convolution(vector<T>&x, vector<T>&h, vector<T>&y_linear, vector<T
 	int Nx = x.size();
 	int Nh = h.size();
 	int Ny = y_linear.size();
-
 	// linear convolution
 	for (int n = 0; n < Ny; n++)
 	{
 		T yn = 0;
 		for (int k = 0; k < Nh; k++)
 		{
-			if (((n - k) < 0) || ((n - k) >= Nx))	yn += 0;
+			if (((n - k) < 0) || ((n - k) >= N))	yn += 0;
 			else									yn += x[n - k] * h[k];
 		}
 		y_linear[n] = yn;
 	}
-
 	// wrapping
 	for (int i = 0; i < N-1-(Nh-1); i++)
 	{
@@ -129,7 +126,7 @@ void overlapsave()
 	vector<float> y_circular;
 	int N = 1024;
 	int Nh;
-	int Fs = 100;
+	int Fs = 1000;
 	init(x, h, y_linear, y_circular, Nh, N, filter_path, output_path);
 	Signal_Loader<float> w(x, Fs);
 	boost::thread t(w);
@@ -142,21 +139,18 @@ void overlapsave()
 	int block_number = 0;
 	int iteration = 0;
 	int block_is_full;
-	//std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-	//std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+
 	while (true)
 	{
-		if (x.size() >= N)
+		cout << "";		// (workaround) for some reason without this line, program go to following if despite 
+		if(x.size() >= N)
 		{
-			//t2 = std::chrono::high_resolution_clock::now();
-			//std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
-			//std::cout << time_span.count() * 1000000 << " us." << std::endl;
-			//cout << x.size() << "   " << x[x.size() - 1] << endl;
+			cout << x.size() << "      " << 1024 << "        " << (x.size() >= 1024) << endl;
+
 			circular_convolution(x, h, y_linear, y_circular, N);
 			//save_samples(y_circular, output_path);
-			x.erase(x.begin(), x.begin() + N);
+			x.erase(x.begin(), x.begin() + N-(Nh-1));
 			block_number += 1;
-			//t1 = std::chrono::high_resolution_clock::now();
 		}
 	}
 	t.join();

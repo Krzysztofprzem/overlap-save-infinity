@@ -23,21 +23,20 @@ Signal_Loader<T>::Signal_Loader(std::vector<T> &x, int Fs) : x(&x), Fs(Fs), end(
 template<typename T>
 void Signal_Loader<T>::operator()()
 {
-	int nano = 1;
-	double Ts = static_cast<double>(nano) / Fs;
-	//cout << Ts << "    "<<nano<<"     "<<Fs<<endl;
-	//cin >> Ts;
+	double Ts = static_cast<double>(1) / Fs;
 	auto start = std::chrono::steady_clock::now();
+	auto finish = std::chrono::steady_clock::now();
 	while (!end)
 	{
-		auto finish = std::chrono::steady_clock::now();
+		finish = std::chrono::steady_clock::now();
 		double elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(finish - start).count();
 		if (elapsed_seconds >= Ts)
 		{
-			cout << elapsed_seconds<<"     "<<Ts << endl;
+			//cout << elapsed_seconds<<"     "<<Ts << endl;
 			T sample = generate_sample();
 			//cout << sample << endl;
 			x->push_back(sample);
+			//cout << x->size()<<endl;
 			start = std::chrono::steady_clock::now();
 		}
 	}

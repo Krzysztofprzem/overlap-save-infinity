@@ -10,7 +10,7 @@ class Signal_Loader
 public:
 	Signal_Loader(std::vector<T> &x, int Fs);
 	void operator()();
-private:
+public:
 	std::vector<T> *x;
 	int Fs;
 	bool end;
