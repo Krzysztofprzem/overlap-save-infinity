@@ -1,24 +1,27 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
 #include <cstdlib>
 #include <ctime>
-#include "Signal_Loader.h"
-#include "chrono"
-#include <boost/chrono.hpp>
+#include <string>
 #include <boost/thread/thread.hpp> 
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread/thread.hpp> 
+#include "Signal_Loader.h"
+#include "chrono"
+#include "filesIO.h"
 
 using namespace std;
-
 
 template<typename T>
 Signal_Loader<T>::Signal_Loader(std::vector<T> &x, int Fs) : x(&x), Fs(Fs), end(false)
 {
+	string path = "D:\\MOJE\\Projekty\\OpenCL\\OverlapSaveGPU\\OverlapSaveGPU\\Samples.csv";
+	load_samples(x_default, path);
 	// empty constructor
 }
+
 
 template<typename T>
 void Signal_Loader<T>::operator()()
@@ -42,6 +45,7 @@ void Signal_Loader<T>::operator()()
 	}
 }
 
+
 template<typename T>
 T Signal_Loader<T>::generate_sample()
 {
@@ -51,18 +55,19 @@ T Signal_Loader<T>::generate_sample()
 
 
 template<typename T>
-void linker_error_solver_type(std::vector<T> x, int Fs = 1000)
+void linker_error_solver_type_Signal_Loader(std::vector<T> x, int Fs = 1000)
 {
 	Signal_Loader<T>solver(x, Fs);
 	solver();
 }
 
-void linker_error_solver()
+
+void linker_error_solver_Signal_Loader()
 {
 	std::vector<float> x;
 	std::vector<double> y;
 	std::vector<int> z;
-	linker_error_solver_type(x);
-	linker_error_solver_type(y);
-	linker_error_solver_type(z);
+	linker_error_solver_type_Signal_Loader(x);
+	linker_error_solver_type_Signal_Loader(y);
+	linker_error_solver_type_Signal_Loader(z);
 }

@@ -7,12 +7,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "overlapsave", "overlapsave\
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug UnitTests|x64 = Debug UnitTests|x64
+		Debug UnitTests|x86 = Debug UnitTests|x86
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{14345238-FA5E-413E-95AB-F99BC87929CD}.Debug UnitTests|x64.ActiveCfg = Debug UnitTests|x64
+		{14345238-FA5E-413E-95AB-F99BC87929CD}.Debug UnitTests|x64.Build.0 = Debug UnitTests|x64
+		{14345238-FA5E-413E-95AB-F99BC87929CD}.Debug UnitTests|x86.ActiveCfg = Debug UnitTests|Win32
+		{14345238-FA5E-413E-95AB-F99BC87929CD}.Debug UnitTests|x86.Build.0 = Debug UnitTests|Win32
 		{14345238-FA5E-413E-95AB-F99BC87929CD}.Debug|x64.ActiveCfg = Debug|x64
 		{14345238-FA5E-413E-95AB-F99BC87929CD}.Debug|x64.Build.0 = Debug|x64
 		{14345238-FA5E-413E-95AB-F99BC87929CD}.Debug|x86.ActiveCfg = Debug|Win32

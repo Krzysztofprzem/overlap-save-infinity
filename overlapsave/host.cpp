@@ -2,56 +2,17 @@
 #include <vector>
 #include <string>
 #include <fstream>
-#include <gtest/gtest.h>
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
 #include <cstdlib>
 #include <ctime>
 #include <chrono>
+#include "host.h"
 #include "Signal_Loader.h"
+#include "filesIO.h"
+#include "convolution.h"
 
 using namespace std;
-
-
-template <typename T>
-void load_samples(std::vector<T> &x_Re, std::string infilename) {
-	std::fstream file;
-	file.open(infilename, std::ios::in);
-	if (!file) {
-		std::cerr << "FILE FAILED TO OPEN!" << std::endl;
-		exit(-1);
-	}
-	int n = 0;
-	float sample;
-	while (file >> sample) {
-		x_Re.push_back(sample);
-		n++;
-		if (n % 1000000 == 0)
-			std::cout << "Loaded " << n << " samples" << std::endl;
-	}
-	std::cout << "Loaded " << n << " samples" << std::endl << std::endl;
-	file.close();
-}
-
-template <typename T>
-void save_samples(std::vector<T> &y, std::string outfilename) {
-	std::fstream file;
-	file.open(outfilename, std::ios::out, std::ios::app);
-	if (!file) {
-		std::cerr << "FILE FAILED TO OPEN!" << std::endl;
-		exit(-1);
-	}
-	int n = 1;
-	for (; n <= y.size(); n++) {
-		file << y[n - 1];
-		file << std::endl;
-		if (n % 1000000 == 0)
-			std::cout << "Saved " << n << " samples" << std::endl;
-	}
-	std::cout << "Saved " << n - 1 << " samples" << std::endl;
-	file.close();
-}
-
 
 template <typename T>
 void zero_padding(std::vector<T> &x, int N)
@@ -81,7 +42,7 @@ void init(vector<T> &x, vector<T> &h, vector<T>&y_linear, vector<T>&y_circular, 
 	Nh = h.size();
 	//zero_padding(h, Nh);
 	zero_padding(x, Nh-1);
-	zero_padding(y_linear, N + Nh - 1);
+	zero_padding(y_linear, 2 * N - 1);
 	zero_padding(y_circular, N - (Nh - 1));
 	create_output_file(output_path);
 }
@@ -103,12 +64,25 @@ void circular_convolution(vector<T>&x, vector<T>&h, vector<T>&y_linear, vector<T
 		}
 		y_linear[n] = yn;
 	}
+	
 	// wrapping
-	for (int i = 0; i < N-1-(Nh-1); i++)
+	for (int i = 0; i < N - 1 - (Nh - 1); i++)
 	{
-		y_circular[i] = y_linear[i+ (Nh - 1)] + y_linear[i + N+ (Nh - 1)];
+		try
+		{
+			//y_circular[i] = y_linear[i + (Nh - 1)] + y_linear[i + N + (Nh - 1)];
+			y_circular.at(i) = y_linear.at(i + (Nh - 1)) + y_linear.at(i + N + (Nh - 1));
+		}
+		catch (const std::out_of_range& e)
+		{
+			cout << Nh << endl;
+			cout << y_circular.size() <<"    "<<i << endl;
+			cout << y_circular.size() << "    " << i + (Nh - 1) << endl;
+			cout << y_linear.size() << "    " << i + N + (Nh - 1) << endl;
+			cin >> N;
+		}
 	}
-	y_circular[N - (Nh - 1)-1] = y_linear[N - 1];
+	y_circular[N - (Nh - 1) - 1] = y_linear[N - 1];
 }
 
 
@@ -126,7 +100,7 @@ void overlapsave()
 	vector<float> y_circular;
 	int N = 1024;
 	int Nh;
-	int Fs = 1000;
+	int Fs = 20000;
 	init(x, h, y_linear, y_circular, Nh, N, filter_path, output_path);
 	Signal_Loader<float> w(x, Fs);
 	boost::thread t(w);
