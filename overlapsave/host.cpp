@@ -47,46 +47,6 @@ void init(vector<T> &x, vector<T> &h, vector<T>&y_linear, vector<T>&y_circular, 
 	create_output_file(output_path);
 }
 
-template <typename T>
-void circular_convolution(vector<T>&x, vector<T>&h, vector<T>&y_linear, vector<T>&y_circular, int N)
-{
-	int Nx = x.size();
-	int Nh = h.size();
-	int Ny = y_linear.size();
-	// linear convolution
-	for (int n = 0; n < Ny; n++)
-	{
-		T yn = 0;
-		for (int k = 0; k < Nh; k++)
-		{
-			if (((n - k) < 0) || ((n - k) >= N))	yn += 0;
-			else									yn += x[n - k] * h[k];
-		}
-		y_linear[n] = yn;
-	}
-	
-	// wrapping
-	for (int i = 0; i < N - 1 - (Nh - 1); i++)
-	{
-		try
-		{
-			//y_circular[i] = y_linear[i + (Nh - 1)] + y_linear[i + N + (Nh - 1)];
-			y_circular.at(i) = y_linear.at(i + (Nh - 1)) + y_linear.at(i + N + (Nh - 1));
-		}
-		catch (const std::out_of_range& e)
-		{
-			cout << Nh << endl;
-			cout << y_circular.size() <<"    "<<i << endl;
-			cout << y_circular.size() << "    " << i + (Nh - 1) << endl;
-			cout << y_linear.size() << "    " << i + N + (Nh - 1) << endl;
-			cin >> N;
-		}
-	}
-	y_circular[N - (Nh - 1) - 1] = y_linear[N - 1];
-}
-
-
-
 
 void overlapsave()
 {
