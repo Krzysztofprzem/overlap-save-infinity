@@ -18,7 +18,7 @@ template<typename T>
 Signal_Loader<T>::Signal_Loader(std::vector<T> &x, int Fs) : x(&x), Fs(Fs), end(false)
 {
 	string path = "D:\\MOJE\\Projekty\\OpenCL\\OverlapSaveGPU\\OverlapSaveGPU\\Samples.csv";
-	load_samples(x_default, path);
+	//load_samples(x_default, path);
 	// empty constructor
 }
 

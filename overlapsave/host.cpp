@@ -12,6 +12,8 @@
 #include "filesIO.h"
 #include "convolution.h"
 
+#include <SFML/Audio.hpp>
+
 using namespace std;
 
 template <typename T>
@@ -91,10 +93,164 @@ void overlapsave()
 }
 
 
+void microphone_input()
+{
+	// get the available sound input device names
+	std::vector<std::string> availableDevices = sf::SoundRecorder::getAvailableDevices();
 
+	for (int i = 0; i < availableDevices.size(); i++)
+	{
+		cout << i << "    " << availableDevices[i] << endl;
+	}
+
+
+	// choose a device
+	std::string inputDevice = availableDevices[0];
+
+	// create the recorder
+	sf::SoundBufferRecorder recorder;
+
+	// set the device
+	if (!recorder.setDevice(inputDevice))
+	{
+		exit(0);
+	}
+
+	//MyRecorder *rec = new SoundBufferRecorder();
+
+	cout << "start" << endl;
+	// start the capture
+	while(true)
+	{
+		auto start = std::chrono::steady_clock::now();
+		auto finish = std::chrono::steady_clock::now();
+		start = std::chrono::steady_clock::now();
+		recorder.start(1000);
+		while (true)
+		{
+			finish = std::chrono::steady_clock::now();
+			double elapsed_seconds = std::chrono::duration_cast<std::chrono::duration<double>>(finish - start).count();
+			if (elapsed_seconds >= 1)
+			{
+				recorder.stop();
+				cout << elapsed_seconds << " seconds" << endl;
+				const sf::SoundBuffer& buffer = recorder.getBuffer();
+				std::cout << " " << buffer.getDuration().asSeconds() << " seconds" << std::endl;
+				const sf::Int16* samples = buffer.getSamples();
+				std::size_t count = buffer.getSampleCount();
+				cout << count << "    " << samples[count - 1] << endl;
+				break;
+			}
+			//else
+			//cout << elapsed_seconds << endl;
+		}
+	}
+	//stop the capture
+	cout << "end" << endl;
+
+	// retrieve the buffer that contains the captured audio data
+	const sf::SoundBuffer& buffer = recorder.getBuffer();
+	std::cout << " " << buffer.getDuration().asSeconds() << " seconds" << std::endl;
+	const sf::Int16* samples = buffer.getSamples();
+	std::size_t count = buffer.getSampleCount();
+	cout << count << "    " << samples[count - 1] << endl;
+	//for (int i = 0; i < count; i++)
+	//{
+	//	//recorder.start(100);
+	//	//Sleep(5000);
+	//	//recorder.stop();
+
+	//	//std::size_t count = buffer.getSampleCount();
+
+	//	if(count>0)
+	//		cout << i << "    " << count << "    " <<samples[count-1] << endl;
+	//}
+}
+
+
+
+void microphone_input2()
+{
+	// Check that the device can capture audio
+	if (sf::SoundRecorder::isAvailable() == false)
+	{
+		std::cout << "Sorry, audio capture is not supported by your system" << std::endl;
+		exit(0);
+	}
+
+	// Choose the sample rate
+	unsigned int sampleRate;
+	std::cout << "Please choose the sample rate for sound capture (44100 is CD quality): ";
+	std::cin >> sampleRate;
+	std::cin.ignore(10000, '\n');
+
+	// Wait for user input...
+	std::cout << "Press enter to start recording audio";
+	std::cin.ignore(10000, '\n');
+
+	// Here we'll use an integrated custom recorder, which saves the captured data into a SoundBuffer
+	sf::SoundBufferRecorder recorder;
+
+	// Audio capture is done in a separate thread, so we can block the main thread while it is capturing
+	recorder.start(sampleRate);
+	std::cout << "Recording... press enter to stop";
+	std::cin.ignore(10000, '\n');
+	recorder.stop();
+
+	// Get the buffer containing the captured data
+	const sf::SoundBuffer& buffer = recorder.getBuffer();
+
+	// Display captured sound informations
+	std::cout << "Sound information:" << std::endl;
+	std::cout << " " << buffer.getDuration().asSeconds() << " seconds" << std::endl;
+	std::cout << " " << buffer.getSampleRate() << " samples / seconds" << std::endl;
+	std::cout << " " << buffer.getChannelCount() << " channels" << std::endl;
+
+	// Choose what to do with the recorded sound data
+	char choice;
+	std::cout << "What do you want to do with captured sound (p = play, s = save) ? ";
+	std::cin >> choice;
+	std::cin.ignore(10000, '\n');
+
+	if (choice == 's')
+	{
+		// Choose the filename
+		std::string filename;
+		std::cout << "Choose the file to create: ";
+		std::getline(std::cin, filename);
+
+		// Save the buffer
+		buffer.saveToFile(filename);
+	}
+	else
+	{
+		// Create a sound instance and play it
+		sf::Sound sound(buffer);
+		sound.play();
+
+		// Wait until finished
+		while (sound.getStatus() == sf::Sound::Playing)
+		{
+			// Display the playing position
+			std::cout << "\rPlaying... " << sound.getPlayingOffset().asSeconds() << " sec        ";
+			std::cout << std::flush;
+
+			// Leave some CPU time for other threads
+			sf::sleep(sf::milliseconds(100));
+		}
+	}
+
+	// Finished!
+	std::cout << std::endl << "Done!" << std::endl;
+
+	// Wait until the user presses 'enter' key
+	std::cout << "Press enter to exit..." << std::endl;
+	std::cin.ignore(10000, '\n');
+}
 
 int main()
 {
+	microphone_input();
 	srand(time(NULL));
 	overlapsave();
 	return 0;
