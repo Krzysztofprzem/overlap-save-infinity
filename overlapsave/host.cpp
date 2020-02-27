@@ -60,11 +60,13 @@ void overlapsave()
 	vector<float> x;
 	vector<float> y_linear;
 	vector<float> y_circular;
-	int N = 1024;
+	vector<float> x_process;
+	int N = 1024*4;
 	int Nh;
 	int Fs = 20000;
 	init(x, h, y_linear, y_circular, Nh, N, filter_path, output_path);
-	Signal_Loader<float> w(x, Fs);
+	boost::mutex m;
+	Signal_Loader<float> w(x, &m, Fs);
 	boost::thread t(w);
 	//circular_convolution(x, h, y_linear, y_circular, N);
 	//for (int i = 0; i < y_circular.size(); i++)
@@ -78,16 +80,20 @@ void overlapsave()
 
 	while (true)
 	{
-		cout << "";		// (workaround) for some reason without this line, program go to following if despite 
+		//cout << "";		// (workaround) for some reason without this line, program go to following if despite 
+		m.lock();
 		if(x.size() >= N)
 		{
-			cout << x.size() << "      " << 1024 << "        " << (x.size() >= 1024) << endl;
-
-			circular_convolution(x, h, y_linear, y_circular, N);
+			x_process = x;
+			m.unlock();
+			cout << x_process.size() << "      " << 1024 << "        " << (x_process.size() >= 1024) << endl;
+			circular_convolution(x_process, h, y_linear, y_circular, N);
 			//save_samples(y_circular, output_path);
+			m.lock();
 			x.erase(x.begin(), x.begin() + N-(Nh-1));
 			block_number += 1;
 		}
+		m.unlock();
 	}
 	t.join();
 }
@@ -250,7 +256,7 @@ void microphone_input2()
 
 int main()
 {
-	microphone_input();
+	//microphone_input();
 	srand(time(NULL));
 	overlapsave();
 	return 0;
